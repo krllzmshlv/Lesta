@@ -12,119 +12,140 @@ def isEven(value):
 
 Ответ:
 Начальная функция проверяет четность числа путем проверки остатка от деления его на 2.
-Плюс: более простая и понятная реализация.
-Минус: менее очевидно для понимания кода другим человеком.
+<br />Плюсы: более простая и понятная реализация.
+<br />Минусы: менее очевидно для понимания кода другим человеком.
 ```python
 def isEven(value):
       return "{0:b}".format(value)[-1] == '0'
 ```
-Функция использует бинарный формат числа для определения его четности, неявно преобразуя число в двоичный формат и проверяет последний бит, чтобы определить, является ли число четным. 
-Плюс: алгоритм не использует количество операций деления .
-Минус: менее очевидно для понимания кода другим человеком.
+Функция использует бинарный формат числа для определения его четности, неявно преобразуя число в двоичный формат и проверяет последний бит, чтобы определить, является ли число четным.<br /> 
+Плюсы: алгоритм не использует  операцию деления. <br />
+Минусы: 1. менее очевидно для понимания кода другим человеком. <br />2. требуется приведение числа к бинарному представлению.
 
-Однако, использование двоичного представления числа может быть сложно и неочевидно для понимания кода другими разработчиками. Также этот метод может быть менее надежным, так как он предполагает, что число ровно в двоичном формате, что может вызвать ошибки при работе с числами, например, вещественными числами.
-
-Вторая реализация проверяет четность числа путем проверки остатка от деления числа на 2. Этот метод является более прямым и понятным для других разработчиков, что делает его легче для понимания и отладки кода. Он также учитывает больший диапазон чисел, включая вещественные числа.
-
-Недостатком второго подхода может быть небольшое уменьшение производительности из-за операции деления, хотя современные компиляторы и исполнители обычно оптимизируют такие операции.
-
-Таким образом, каждая из реализаций имеет свои плюсы и минусы, и выбор между ними зависит от конкретных требований проекта и предпочтений разработчика.
       
 Вопрос №2
 
 На языке Python написать минимум по 2 класса реализовывающих циклический буфер FIFO. Объяснить плюсы и минусы каждой реализации.
 Оценивается:
-
-Полнота и качество реализации
-Оформление кода
-Наличие сравнения и пояснения по быстродействию
-1.
+<br />Полнота и качество реализации
+<br />Оформление кода
+<br />Наличие сравнения и пояснения по быстродействию
+<br />Ответ
+1. Реализация с использованием указателей чтения и записи
 ```python
 class FIFO:
   def __init__(self, lenf, stindex):
         self.fifo = [None] * lenf
         self.lenfifo = lenf
-        self.start = stindex #откуда начинать записывать новые
-        self.end = stindex #откуда начинать стирать
+        self.write = stindex #откуда начинать записывать новые элементы
+        self.read = stindex #откуда начинать стирать элементы
 
-  def add_new(self, num):
-        if ((self.start == self.end) & (self.fifo[self.end-1] != None)):
-           if (self.end ==  self.lenfifo):
-              self.end == 0
+  #Записать новый элемент в буфер
+  def write_new(self, num):
+        if ((self.write == self.read) and  (self.fifo[self.read-1] != None)):
+           if (self.read ==  self.lenfifo):
+              self.read = 0
            else:
-              self.end = self.end + 1
+              self.read = self.read + 1
 
-        if (self.start ==  self.lenfifo-1):
-          self.fifo[self.start] = num
-          self.start = 0
+        if (self.write ==  self.lenfifo-1):
+          self.fifo[self.write] = num
+          self.write = 0
         else:
-          self.fifo[self.start] = num
-          self.start = self.start + 1
+          self.fifo[self.write] = num
+          self.write = self.write + 1
 
-
-  def del_last(self, count):
+  #Очистить самый ранний элемент в количестве count
+  def read_old(self, count):
       for i in range(count):
-        self.fifo[self.end] = None
-        if (self.end ==  self.lenfifo - 1):
-          self.end = 0
+        if self.fifo.count(None) != self.lenfifo:
+          self.fifo[self.read] = None
+          if (self.read ==  self.lenfifo - 1):
+            self.read = 0
+          else:
+            self.read = self.read + 1
         else:
-          self.end = self.end + 1
+          print('Буфер пуст')
 
+  #Очистка буфера
   def reset(self):
     self.fifo = [None] * self.lenfifo
+    self.read = 0
 
+  #Вывести следующий считываемый из буфера элемент
   def next(self):
-    return self.fifo[self.end]
+    return self.fifo[self.read]
 
+  #Проверка буфера на заполненность
   def empty(self):
     if self.fifo.count(None) == 0:
       print('Буфер полон')
     if self.fifo.count(None) == self.lenfifo:
       print('Буфер пуст')
 
+  #Подсчет количества элементов в буфере
   def fifocount(self):
     return self.lenfifo - self.fifo.count(None)
+
+
 ```
-2.
+2. Реализация с использованием указателя записи и подсчетом элементов буфера
 ```python
 class FIFO:
   def __init__(self, lenf, stindex):
         self.fifo = [None] * lenf
         self.lenfifo = lenf
-        self.start = stindex #откуда начинать записывать новые
+        self.write = stindex #откуда начинать записывать новые элементы
 
-  def add_new(self, num):
-    self.fifo[self.start] = num
+  #Записать новый элемент в буфер
+  def write_new(self, num):
+    self.fifo[self.write] = num
     if self.fifo.count(None) == 0:
-      self.start =  self.start - self.lenfifo +1
-      if self.start < 0: self.start = self.start + self.lenfifo
+      self.write =  self.write - self.lenfifo +1
+      if self.write < 0: self.write = self.write + self.lenfifo
     else:
-      self.start =  self.start + 1
-      if self.start == self.lenfifo:
-        self.start = 0
-    print(self.fifo, self.start)
+      self.write =  self.write + 1
+      if self.write == self.lenfifo:
+        self.write = 0
 
-  def del_last(self, count):
+  #Очистить самый ранний элемент в количестве count
+  def read_old(self, count):
     for i in range(count):
-      c = self.fifo.count(None)
-      self.fifo[x.start - (x.lenfifo - x.fifo.count(None))] = None
+      self.fifo[self.write - (self.lenfifo - self.fifo.count(None))] = None
 
 
+  #Очистка буфера
   def reset(self):
     self.fifo = [None] * self.lenfifo
 
+  #Вывести следующий считываемый из буфера элемент
   def next(self):
-    return self.fifo[self.end]
+    return self.fifo[self.write - (self.lenfifo - self.fifo.count(None))]
 
+  #Проверка буфера на заполненность
   def empty(self):
     if self.fifo.count(None) == 0:
       print('Буфер полон')
     if self.fifo.count(None) == self.lenfifo:
       print('Буфер пуст')
 
+  #Подсчет количества элементов в буфере
   def fifocount(self):
     return self.lenfifo - self.fifo.count(None)
+
 ```
+Первый класс основан на использовании маркера - позиции чтения самого старого элемента
+Плюсы:
+1. Нет зависимости от количества записанных элементов в буфере, для перехода на новый круг достаточно знать размер буфера как границу.
+
+Минусы:
+1. При записи и чтении элемента также отслеживается указатель чтения.
+
+Второай класс основан на использовании счетчика заполнения
+Плюсы:
+1. Простота и понятность логики, основанной на подсчете количества пустых ячеек в буфере.
+2. Отсутствие необходимости в дополнительном указателе чтения.
+3. Быстрее реализации с указателем чтения.
 
 Вопрос №3
 
